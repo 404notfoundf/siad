@@ -41,6 +41,9 @@ func parseModules(config Config) node.NodeParams {
 		// a wallet
 		params.CreateAccounting = true
 	}
+	if strings.Contains(config.Siad.Modules, "p") {
+		params.CreatePool = true
+	}
 	// Parse remaining fields.
 	params.Bootstrap = !config.Siad.NoBootstrap
 	params.UseUPNP = config.Siad.UseUPNP

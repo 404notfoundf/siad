@@ -2,6 +2,9 @@ package main
 
 import (
 	"fmt"
+	"go.sia.tech/siad/modules/pool"
+	"gopkg.in/yaml.v2"
+	"io/ioutil"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -91,10 +94,13 @@ func processModules(modules string) (string, error) {
 		return "gctwaf", nil
 	case "explorer":
 		return "gce", nil
+	case "pool":
+		return "gctwaph", nil
 	}
+	validModules := "acghmrtwefp"
 
 	// Check module letters provided
-	validModules := "acghmrtwef"
+	//validModules := "acghmrtwef"
 	invalidModules := modules
 	for _, m := range validModules {
 		invalidModules = strings.Replace(invalidModules, string(m), "", 1)
@@ -211,6 +217,12 @@ func startDaemon(config Config) (err error) {
 	// set the wallet password from the environment variable
 	nodeParams.WalletPassword = build.WalletPassword()
 
+	// TODO 增加读取配置文件
+	nodeParams.PoolCfg, err = ReadFile()
+	if err != nil {
+		return err
+	}
+
 	// Start and run the server.
 	srv, err := server.New(config.Siad.APIaddr, config.Siad.RequiredUserAgent, config.APIPassword, nodeParams, loadStart)
 	if err != nil {
@@ -282,4 +294,20 @@ func startDaemonCmd(cmd *cobra.Command, _ []string) {
 
 	// Daemon seems to have closed cleanly. Print a 'closed' message.
 	fmt.Println("Shutdown complete.")
+}
+
+func ReadFile() (pool.PoolConfig, error) {
+	content, _ := ioutil.ReadFile("siaprime.yaml")
+	yamlCfg := pool.GlobalConfig{}
+	var c pool.PoolConfig
+	err := yaml.Unmarshal(content, &yamlCfg)
+	if err != nil {
+		println("failed to read yaml file")
+		return c, err
+	}
+	c.PoolName = yamlCfg.MiningPool.Name
+	c.PoolWebUrl = yamlCfg.MiningPool.PoolWebUrl
+	c.PoolWallet = yamlCfg.MiningPool.PoolWallet
+	c.PoolLogDir = yamlCfg.MiningPool.PoolLogDir
+	return c, nil
 }

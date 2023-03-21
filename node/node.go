@@ -8,6 +8,7 @@ package node
 
 import (
 	"fmt"
+	"go.sia.tech/siad/modules/pool"
 	"os"
 	"path/filepath"
 	"time"
@@ -70,6 +71,10 @@ type NodeParams struct {
 	CreateTransactionPool bool
 	CreateWallet          bool
 
+	//TODO
+	CreatePool bool
+	Pool       modules.Pool
+	PoolCfg    pool.PoolConfig
 	// Custom modules - if the modules is provided directly, the provided
 	// module will be used instead of creating a new one. If a custom module is
 	// provided, the 'omit' flag for that module must be set to false (which is
@@ -131,7 +136,8 @@ type Node struct {
 	// The mux of the node.
 	Mux    *siamux.SiaMux
 	muxLog *os.File
-
+	// TODO
+	Pool modules.Pool
 	// The modules of the node. Modules that are not initialized will be nil.
 	Accounting      modules.Accounting
 	ConsensusSet    modules.ConsensusSet
@@ -176,6 +182,9 @@ func (np NodeParams) NumModules() (n int) {
 		n++
 	}
 	if np.CreateAccounting || np.Accounting != nil {
+		n++
+	}
+	if np.CreatePool || np.Pool != nil {
 		n++
 	}
 	return
@@ -429,6 +438,30 @@ func New(params NodeParams, loadStartTime time.Time) (*Node, <-chan error) {
 		return nil, errChan
 	}
 
+	// 开启pool
+	p, err := func() (modules.Pool, error) {
+		if params.CreatePool && params.Pool != nil {
+			return nil, errors.New("cannot create pool and also use custom pool")
+		}
+		if params.Pool != nil {
+			return params.Pool, nil
+		}
+		if !params.CreatePool {
+			return nil, nil
+		}
+		i++
+		printfRelease("(%d/%d) Loading pool...\n", i, numModules)
+		p, err := pool.New(cs, tp, g, w, filepath.Join(dir, modules.PoolDir), params.PoolCfg)
+		if err != nil {
+			return nil, err
+		}
+		return p, nil
+	}()
+	if err != nil {
+		errChan <- errors.Extend(err, errors.New("unable to create pool"))
+		return nil, errChan
+	}
+
 	// Miner.
 	m, err := func() (modules.TestMiner, error) {
 		if params.CreateMiner && params.Miner != nil {
@@ -607,9 +640,8 @@ func New(params NodeParams, loadStartTime time.Time) (*Node, <-chan error) {
 	}()
 
 	return &Node{
-		Mux:    mux,
-		muxLog: muxLog,
-
+		Mux:             mux,
+		muxLog:          muxLog,
 		Accounting:      acc,
 		ConsensusSet:    cs,
 		Explorer:        e,
@@ -619,7 +651,7 @@ func New(params NodeParams, loadStartTime time.Time) (*Node, <-chan error) {
 		Renter:          r,
 		TransactionPool: tp,
 		Wallet:          w,
-
-		Dir: dir,
+		Pool:            p,
+		Dir:             dir,
 	}, errChan
 }
