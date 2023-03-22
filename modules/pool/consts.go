@@ -16,7 +16,7 @@ const (
 	MinorVersion = 3
 	// SiaCoinID is the coin id used by yiimp to associate various records
 	// with Siacoin
-	SiaCoinID = 1318
+	SiaCoinID = 1316
 	// SiaCoinSymbol is the coin symbol used by yiimp to associate various records
 	// with Siacoin
 	SiaCoinSymbol = "SC"
