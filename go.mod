@@ -11,13 +11,14 @@ require (
 	github.com/kardianos/osext v0.0.0-20190222173326-2bc1f35cddc0
 	github.com/klauspost/cpuid v1.2.2 // indirect
 	github.com/klauspost/reedsolomon v1.9.3
-	github.com/lestrrat/go-file-rotatelogs v0.0.0-20180223000712-d3151e2a480f // indirect
+	github.com/lestrrat/go-file-rotatelogs v0.0.0-20180223000712-d3151e2a480f
 	github.com/lestrrat/go-strftime v0.0.0-20180220042222-ba3bf9c1d042 // indirect
 	github.com/pkg/errors v0.9.1
-	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5 // indirect
-	github.com/sasha-s/go-deadlock v0.3.1 // indirect
-	github.com/sirupsen/logrus v1.9.0 // indirect
+	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
+	github.com/sasha-s/go-deadlock v0.3.1
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.0.0
+	github.com/spf13/viper v1.15.0
 	github.com/vbauerster/mpb/v5 v5.0.3
 	gitlab.com/NebulousLabs/bolt v1.4.4
 	gitlab.com/NebulousLabs/demotemutex v0.0.0-20151003192217-235395f71c40
@@ -33,8 +34,8 @@ require (
 	gitlab.com/NebulousLabs/siamux v0.0.2-0.20220630142132-142a1443a259
 	gitlab.com/NebulousLabs/threadgroup v0.0.0-20200608151952-38921fbef213
 	gitlab.com/NebulousLabs/writeaheadlog v0.0.0-20200618142844-c59a90f49130
-	golang.org/x/crypto v0.0.0-20220507011949-2cf3adece122
-	golang.org/x/net v0.0.0-20211112202133-69e39bad7dc2
-	golang.org/x/term v0.0.0-20210421210424-b80969c67360
-	gopkg.in/yaml.v2 v2.2.2 // indirect
+	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
+	golang.org/x/net v0.4.0
+	golang.org/x/term v0.3.0
+	gopkg.in/yaml.v2 v2.4.0
 )

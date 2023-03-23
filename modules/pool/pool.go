@@ -13,14 +13,13 @@ import (
 	"github.com/sirupsen/logrus"
 	"gitlab.com/NebulousLabs/encoding"
 	"go.sia.tech/siad/node/api"
-	"math"
+	"math/rand"
 	"net/http"
 	"path/filepath"
 	"time"
 
 	"github.com/sasha-s/go-deadlock"
 
-	"gitlab.com/NebulousLabs/fastrand"
 	"gitlab.com/NebulousLabs/threadgroup"
 
 	"go.sia.tech/siad/build"
@@ -33,6 +32,7 @@ import (
 var (
 	// persistMetadata is the header that gets written to the persist file, and is
 	// used to recognize other persist files.
+	// TODO 这里需要修改，但暂时不能改，同步的数据Header是这样，如果上线需要修改
 	persistMetadata = persist.Metadata{
 		Header:  "Sc Pool",
 		Version: "0.0.1",
@@ -270,7 +270,7 @@ func newPool(dependencies dependencies, cs modules.ConsensusSet, tpool modules.T
 		},
 
 		persistDir: persistDir,
-		stratumID:  fastrand.Uint64n(math.MaxUint64/2 + 1),
+		stratumID:  rand.Uint64(),
 	}
 	var err error
 
@@ -400,7 +400,6 @@ func (p *Pool) checkAddress() error {
 	return nil
 }
 
-// TODO: 应该要修改
 func (p *Pool) coinB1() types.Transaction {
 	s := fmt.Sprintf("\000     Software: siad-miningpool-module v%d.%02d\nPool name: \"%s\"     \000", MajorVersion, MinorVersion, p.InternalSettings().PoolName)
 	if ((len(modules.PrefixNonSia[:]) + len(s)) % 2) != 0 {

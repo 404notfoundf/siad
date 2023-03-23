@@ -438,30 +438,6 @@ func New(params NodeParams, loadStartTime time.Time) (*Node, <-chan error) {
 		return nil, errChan
 	}
 
-	// 开启pool
-	p, err := func() (modules.Pool, error) {
-		if params.CreatePool && params.Pool != nil {
-			return nil, errors.New("cannot create pool and also use custom pool")
-		}
-		if params.Pool != nil {
-			return params.Pool, nil
-		}
-		if !params.CreatePool {
-			return nil, nil
-		}
-		i++
-		printfRelease("(%d/%d) Loading pool...\n", i, numModules)
-		p, err := pool.New(cs, tp, g, w, filepath.Join(dir, modules.PoolDir), params.PoolCfg)
-		if err != nil {
-			return nil, err
-		}
-		return p, nil
-	}()
-	if err != nil {
-		errChan <- errors.Extend(err, errors.New("unable to create pool"))
-		return nil, errChan
-	}
-
 	// Miner.
 	m, err := func() (modules.TestMiner, error) {
 		if params.CreateMiner && params.Miner != nil {
@@ -629,6 +605,30 @@ func New(params NodeParams, loadStartTime time.Time) (*Node, <-chan error) {
 	}()
 	if err != nil {
 		errChan <- errors.AddContext(err, "unable to create accounting module")
+		return nil, errChan
+	}
+
+	// 开启pool
+	p, err := func() (modules.Pool, error) {
+		if params.CreatePool && params.Pool != nil {
+			return nil, errors.New("cannot create pool and also use custom pool")
+		}
+		if params.Pool != nil {
+			return params.Pool, nil
+		}
+		if !params.CreatePool {
+			return nil, nil
+		}
+		i++
+		printfRelease("(%d/%d) Loading pool...\n", i, numModules)
+		p, err := pool.New(cs, tp, g, w, filepath.Join(dir, modules.PoolDir), params.PoolCfg)
+		if err != nil {
+			return nil, err
+		}
+		return p, nil
+	}()
+	if err != nil {
+		errChan <- errors.Extend(err, errors.New("unable to create pool"))
 		return nil, errChan
 	}
 

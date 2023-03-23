@@ -6,15 +6,6 @@ import (
 	"io"
 )
 
-type GlobalConfig struct {
-	MiningPool struct {
-		Name       string `yaml:"name"`
-		PoolWallet string `yaml:"poolwallet"`
-		PoolWebUrl string `yaml:"poolweburl"`
-		PoolLogDir string `yaml:"poollogdir"`
-	}
-}
-
 type PoolConfig struct {
 	PoolName   string
 	PoolWallet string

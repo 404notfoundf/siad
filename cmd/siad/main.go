@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"go.sia.tech/siad/modules/pool"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -55,6 +56,7 @@ type Config struct {
 		// is not set by a user flag.
 		SiaDir string
 	}
+	MiningPoolConfig pool.PoolConfig
 }
 
 // die prints its arguments to stderr, then exits the program with the default

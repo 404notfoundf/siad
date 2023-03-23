@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"gitlab.com/NebulousLabs/errors"
 	"go.sia.tech/siad/modules/pool"
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"golang.org/x/term"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -12,10 +14,6 @@ import (
 	"strings"
 	"syscall"
 	"time"
-
-	"github.com/spf13/cobra"
-	"gitlab.com/NebulousLabs/errors"
-	"golang.org/x/term"
 
 	"go.sia.tech/siad/build"
 	"go.sia.tech/siad/modules"
@@ -201,7 +199,6 @@ func startDaemon(config Config) (err error) {
 	if err != nil {
 		return errors.AddContext(err, "failed to get API password")
 	}
-
 	// Print the siad Version and GitRevision
 	printVersionAndRevision()
 
@@ -216,9 +213,8 @@ func startDaemon(config Config) (err error) {
 	nodeParams := parseModules(config)
 	// set the wallet password from the environment variable
 	nodeParams.WalletPassword = build.WalletPassword()
+	nodeParams.PoolCfg = globalConfig.MiningPoolConfig
 
-	// TODO 增加读取配置文件
-	nodeParams.PoolCfg, err = ReadFile()
 	if err != nil {
 		return err
 	}
@@ -264,6 +260,13 @@ func startDaemonCmd(cmd *cobra.Command, _ []string) {
 		die(errors.AddContext(err, "failed to parse input parameter"))
 	}
 
+	//TODO: 增加读取配置文件
+	err = ReadFileConfig(globalConfig)
+	if err != nil {
+		fmt.Println("faile to read configuration: ", err.Error())
+		os.Exit(exitCodeGeneral)
+	}
+
 	// Parse profile flags
 	profileCPU := strings.Contains(config.Siad.Profile, "c")
 	profileMem := strings.Contains(config.Siad.Profile, "m")
@@ -296,18 +299,29 @@ func startDaemonCmd(cmd *cobra.Command, _ []string) {
 	fmt.Println("Shutdown complete.")
 }
 
-func ReadFile() (pool.PoolConfig, error) {
-	content, _ := ioutil.ReadFile("siaprime.yaml")
-	yamlCfg := pool.GlobalConfig{}
-	var c pool.PoolConfig
-	err := yaml.Unmarshal(content, &yamlCfg)
-	if err != nil {
-		println("failed to read yaml file")
-		return c, err
+func ReadFileConfig(config Config) error {
+	viper.SetConfigType("yaml")
+	viper.SetConfigName("sia")
+	viper.AddConfigPath(".")
+	if strings.Contains(config.Siad.Modules, "p") {
+		err := viper.ReadInConfig() // Find and read the config file
+		if err != nil {             // Handle errors reading the config file
+			return err
+		}
+		poolViper := viper.Sub("miningpool")
+		poolViper.SetDefault("name", "")
+		poolViper.SetDefault("acceptingcontracts", false)
+		poolViper.SetDefault("operatorpercentage", 0.0)
+
+		poolWebUrl := poolViper.GetString("poolweburl")
+		poolLogDir := poolViper.GetString("poollogdir")
+		poolConfig := pool.PoolConfig{
+			PoolName:   poolViper.GetString("name"),
+			PoolWallet: poolViper.GetString("poolwallet"),
+			PoolWebUrl: poolWebUrl,
+			PoolLogDir: poolLogDir,
+		}
+		globalConfig.MiningPoolConfig = poolConfig
 	}
-	c.PoolName = yamlCfg.MiningPool.Name
-	c.PoolWebUrl = yamlCfg.MiningPool.PoolWebUrl
-	c.PoolWallet = yamlCfg.MiningPool.PoolWallet
-	c.PoolLogDir = yamlCfg.MiningPool.PoolLogDir
-	return c, nil
+	return nil
 }
